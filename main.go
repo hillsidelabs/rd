@@ -2,124 +2,28 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"io"
 	"log"
 	"os"
 	"os/exec"
-	"strings"
 
+	"github.com/hillside-labs/rd/infra"
+	"github.com/hillside-labs/rd/infra/amazon"
 	"github.com/ionrock/procs"
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
+
 	"github.com/urfave/cli/v2"
-	"gopkg.in/yaml.v3"
 )
 
-type tfoutput struct {
-	Values struct {
-		RootModule struct {
-			Resources []struct {
-				Values struct {
-					Name      string `json:"name"`
-					IP        string `json:"ipv4_address"`
-					PrivateIP string `json:"ipv4_address_private"`
-				} `json:"values"`
-			} `json:"resources"`
-		} `json:"root_module"`
-	} `json:"values"`
-}
-
-type Host struct {
-	Name      string
-	IP        string
-	PrivateIP string
-}
-
-func (h Host) String() string {
-	return fmt.Sprintf("%s:\t%s\t[%s]", h.Name, h.IP, h.PrivateIP)
-}
-
-func GetHostFromDOTerraform() ([]Host, error) {
-	cmd := exec.Command("terraform", "show", "-json")
-	cmd.Dir = "./infra"
-	out, err := cmd.Output()
+func GetTargetsWithFlags(c *cli.Context) ([]infra.Host, error) {
+	catalog, err := infra.NewCatalog()
 	if err != nil {
 		return nil, err
 	}
 
-	var tf tfoutput
-	if err := json.Unmarshal(out, &tf); err != nil {
-		return nil, err
-	}
-
-	hosts := []Host{}
-
-	for _, value := range tf.Values.RootModule.Resources {
-		// Only add a host if it has an address.
-		if value.Values.IP != "" && value.Values.PrivateIP != "" {
-			hosts = append(hosts, Host{
-				Name:      value.Values.Name,
-				IP:        value.Values.IP,
-				PrivateIP: value.Values.PrivateIP,
-			})
-		}
-	}
-
-	return hosts, nil
-}
-
-func GetHostsFromFile() ([]Host, error) {
-	out, err := os.ReadFile("hosts.yml")
-	if err != nil {
-		return nil, err
-	}
-
-	var hosts []Host
-	err = yaml.Unmarshal(out, &hosts)
-	return hosts, err
-}
-
-// GetHosts discovers the available hosts. We currently support a
-// hosts.yml file and the output from DO VM resources in terraform.
-func GetHosts() ([]Host, error) {
-	hosts, err := GetHostsFromFile()
-	if err != nil {
-		return GetHostFromDOTerraform()
-	}
-	return hosts, err
-}
-
-func GetTargets(name, ip, private string) ([]Host, error) {
-	hosts, err := GetHosts()
-	if err != nil {
-		return nil, err
-	}
-
-	targets := []Host{}
-
-	for _, h := range hosts {
-		if name != "" && strings.HasPrefix(h.Name, name) {
-			targets = append(targets, h)
-		}
-		if ip != "" && h.IP == ip {
-			targets = append(targets, h)
-		}
-		if private != "" && h.Name == private {
-			targets = append(targets, h)
-		}
-
-		if name == "" && ip == "" && private == "" {
-			targets = append(targets, h)
-		}
-	}
-
-	return targets, nil
-}
-
-func GetTargetsWithFlags(c *cli.Context) ([]Host, error) {
-	return GetTargets(
+	return catalog.GetTargets(
 		c.String("name"),
 		c.String("ip"),
 		c.String("private"),
@@ -135,7 +39,7 @@ func rdUser() string {
 	return user
 }
 
-func NewSSHCmd(host Host, args ...string) *exec.Cmd {
+func NewSSHCmd(host infra.Host, args ...string) *exec.Cmd {
 	user := rdUser()
 	conn := fmt.Sprintf("%s@%s", user, host.IP)
 	command := exec.Command("ssh", conn)
@@ -144,7 +48,7 @@ func NewSSHCmd(host Host, args ...string) *exec.Cmd {
 	return command
 }
 
-func ExecuteCmd(host Host, args ...string) {
+func ExecuteCmd(host infra.Host, args ...string) {
 	command := NewSSHCmd(host, args...)
 	p := procs.Process{Cmds: []*exec.Cmd{command}}
 	p.OutputHandler = func(line string) string {
@@ -158,7 +62,7 @@ func ExecuteCmd(host Host, args ...string) {
 	p.Run()
 }
 
-func SyncFiles(host Host, src string, recursive bool) {
+func SyncFiles(host infra.Host, src string, recursive bool) {
 	user := rdUser()
 	dest := fmt.Sprintf("%s@%s:.", user, host.IP)
 	command := exec.Command("scp")
@@ -366,6 +270,65 @@ func main() {
 					runDockerStatus(targets)
 
 					return nil
+				},
+			},
+			{
+				Name:  "infra",
+				Usage: "Manage infrastructure",
+				Subcommands: []*cli.Command{
+					{
+						Name:  "create",
+						Usage: "Create a new VM instance",
+						Flags: []cli.Flag{
+							&cli.StringFlag{
+								Name:     "name",
+								Usage:    "Name of the VM instance",
+								Required: true,
+							},
+							&cli.StringFlag{
+								Name:  "image-id",
+								Usage: "AWS AMI ID",
+								Value: "ami-02fe0558ef9c00c8c", // Ubuntu 24.10 us-west-2
+							},
+							&cli.StringFlag{
+								Name:  "type",
+								Usage: "Instance type",
+								Value: "t2.micro",
+							},
+							&cli.StringSliceFlag{
+								Name:  "tag",
+								Usage: "Tags to apply to the instance (can be specified multiple times)",
+							},
+							&cli.StringFlag{
+								Name:  "region",
+								Usage: "AWS region",
+								Value: "us-west-2",
+							},
+						},
+						Action: func(c *cli.Context) error {
+							// Create AWS config with custom region
+							config := amazon.NewAWSConfig()
+							config.Region = c.String("region")
+
+							// Create the VM
+							vm := &amazon.VM{
+								Config:       config,
+								Name:         c.String("name"),
+								ImageID:      c.String("image-id"),
+								InstanceType: c.String("type"),
+								Tags:         c.StringSlice("tag"),
+								VPC:          c.String("name"), // Use name as VPC name
+							}
+
+							// Create the VM instance
+							if err := vm.Create(); err != nil {
+								return fmt.Errorf("failed to create VM: %v", err)
+							}
+
+							fmt.Printf("Successfully created VM '%s'\n", vm.Name)
+							return nil
+						},
+					},
 				},
 			},
 		},

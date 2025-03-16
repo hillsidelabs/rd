@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AWS Network Manager</title>
+    <style>
+        :root {
+            --primary-color: #232f3e;
+            --secondary-color: #ff9900;
+            --bg-color: #f8f9fa;
+            --border-color: #dee2e6;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+        }
+
+        .header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav {
+            background-color: white;
+            border-right: 1px solid var(--border-color);
+            width: 250px;
+            height: calc(100vh - 60px);
+            padding: 1rem;
+            float: left;
+        }
+
+        .nav-item {
+            padding: 0.75rem;
+            margin: 0.25rem 0;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        .nav-item:hover {
+            background-color: var(--bg-color);
+        }
+
+        .main-content {
+            margin-left: 250px;
+            padding: 2rem;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1rem;
+        }
+
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 1rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-active {
+            background-color: #28a745;
+        }
+
+        .status-inactive {
+            background-color: #dc3545;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>AWS Network Manager</h1>
+        <div class="user-info">
+            Admin | Region: us-east-1
+        </div>
+    </div>
+
+    <div class="nav">
+        <div class="nav-item">Dashboard</div>
+        <div class="nav-item">VPC Management</div>
+        <div class="nav-item">Subnets</div>
+        <div class="nav-item">Route Tables</div>
+        <div class="nav-item">Security Groups</div>
+        <div class="nav-item">Network ACLs</div>
+        <div class="nav-item">Internet Gateways</div>
+        <div class="nav-item">VPN Connections</div>
+        <div class="nav-item">Direct Connect</div>
+        <div class="nav-item">Settings</div>
+    </div>
+
+    <div class="main-content">
+        <div class="dashboard-grid">
+            <div class="card">
+                <h3>Network Status</h3>
+                <p><span class="status-indicator status-active"></span> VPC: Running</p>
+                <p><span class="status-indicator status-active"></span> Internet Gateway: Connected</p>
+                <p><span class="status-indicator status-inactive"></span> VPN: Disconnected</p>
+            </div>
+
+            <div class="card">
+                <h3>Resource Summary</h3>
+                <p>Active VPCs: 3</p>
+                <p>Subnets: 12</p>
+                <p>Route Tables: 6</p>
+                <p>Security Groups: 8</p>
+            </div>
+
+            <div class="card">
+                <h3>Network Traffic</h3>
+                <p>Inbound: 1.2 GB/s</p>
+                <p>Outbound: 800 MB/s</p>
+                <p>Active Connections: 1,234</p>
+            </div>
+
+            <div class="card">
+                <h3>Recent Alerts</h3>
+                <p>⚠️ High bandwidth usage detected</p>
+                <p>✅ Security group update successful</p>
+                <p>ℹ️ New subnet created</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

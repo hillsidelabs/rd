@@ -1,12 +1,13 @@
 package main
 
 import (
+	"github.com/hillside-labs/rd/infra"
 	"github.com/urfave/cli/v2"
 )
 
 var dockerStatusCmd = []string{"docker", "compose", "ps"}
 
-func runDockerCmd(targets []Host, cmd []string, arg string) {
+func runDockerCmd(targets []infra.Host, cmd []string, arg string) {
 	if arg != "" {
 		cmd = append(cmd, arg)
 	}
@@ -16,7 +17,7 @@ func runDockerCmd(targets []Host, cmd []string, arg string) {
 	}
 }
 
-func runDockerStatus(targets []Host) {
+func runDockerStatus(targets []infra.Host) {
 	for _, t := range targets {
 		ExecuteCmd(t, "docker", "ps")
 	}
