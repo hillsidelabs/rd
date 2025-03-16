@@ -6,7 +6,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/hillside-labs/rd/infra/amazon"
+	"github.com/hillsidelabs/rd/infra/amazon"
 	"gopkg.in/yaml.v3"
 )
 

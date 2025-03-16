@@ -31,4 +31,3 @@ func (s *Server) Start() error {
 	// Start the server
 	return http.ListenAndServe(":"+s.port, nil)
 }
-

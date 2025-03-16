@@ -1,4 +1,4 @@
-module github.com/hillside-labs/rd
+module github.com/hillsidelabs/rd
 
 go 1.21.6
 

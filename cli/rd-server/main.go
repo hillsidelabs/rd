@@ -4,7 +4,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/hillside-labs/rd/web"
+	"github.com/hillsidelabs/rd/web"
 	"github.com/urfave/cli/v2"
 )
 
@@ -31,4 +31,3 @@ func main() {
 		log.Fatal(err)
 	}
 }
-

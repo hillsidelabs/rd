@@ -8,8 +8,8 @@ import (
 	"os"
 	"os/exec"
 
-	"github.com/hillside-labs/rd/infra"
-	"github.com/hillside-labs/rd/infra/amazon"
+	"github.com/hillsidelabs/rd/infra"
+	"github.com/hillsidelabs/rd/infra/amazon"
 	"github.com/ionrock/procs"
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"

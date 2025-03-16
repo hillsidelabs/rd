@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/hillside-labs/rd/infra"
+	"github.com/hillsidelabs/rd/infra"
 	"github.com/urfave/cli/v2"
 )
 
