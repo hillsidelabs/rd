@@ -16,7 +16,7 @@ func main() {
 			&cli.StringFlag{
 				Name:    "port",
 				Aliases: []string{"p"},
-				Value:   "8080",
+				Value:   "8090",
 				Usage:   "Port to run the server on",
 			},
 		},

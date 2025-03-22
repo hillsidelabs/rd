@@ -1,11 +1,15 @@
 module github.com/hillsidelabs/rd
 
-go 1.21.6
+go 1.24.0
+
+toolchain go1.24.1
 
 require (
+	github.com/a-h/templ v0.3.833
 	github.com/aws/aws-sdk-go-v2 v1.32.6
 	github.com/aws/aws-sdk-go-v2/config v1.28.6
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.195.0
+	github.com/axzilla/templui v0.40.0
 	github.com/ionrock/procs v0.0.0-20230108235056-4ba188ce3ead
 	github.com/minio/minio-go/v7 v7.0.68
 	github.com/urfave/cli/v2 v2.27.1
@@ -13,6 +17,7 @@ require (
 )
 
 require (
+	github.com/Oudwins/tailwind-merge-go v0.2.0 // indirect
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.47 // indirect
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.16.21 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.3.25 // indirect
@@ -38,11 +43,10 @@ require (
 	github.com/poy/onpar v0.3.2 // indirect
 	github.com/rs/xid v1.5.0 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
-	github.com/stretchr/testify v1.9.0 // indirect
 	github.com/xrash/smetrics v0.0.0-20201216005158-039620a65673 // indirect
-	golang.org/x/crypto v0.19.0 // indirect
-	golang.org/x/net v0.21.0 // indirect
-	golang.org/x/sys v0.26.0 // indirect
-	golang.org/x/text v0.14.0 // indirect
+	golang.org/x/crypto v0.31.0 // indirect
+	golang.org/x/net v0.33.0 // indirect
+	golang.org/x/sys v0.28.0 // indirect
+	golang.org/x/text v0.21.0 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 )

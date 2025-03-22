@@ -1,0 +1,5 @@
+.DS_Store
+./rd
+rd-server
+devenv.yml
+.vscode
