@@ -15,10 +15,6 @@ func (s *Server) CatalogHandler() http.Handler {
 			return
 		}
 
-		w.Header().Set("Content-Type", "application/json")
-		if err := json.NewEncoder(w).Encode(catalog.Hosts); err != nil {
-			http.Error(w, "Failed to encode catalog: "+err.Error(), http.StatusInternalServerError)
-			return
-		}
+
 	})
 }
