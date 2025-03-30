@@ -4,6 +4,13 @@ import (
 	"github.com/hillsidelabs/rd/web/ui/modules"
 )
 
-# Add a two column layout where there is a sidebar on the left side. This should use the modules.Sidebar and then a content area to the right. The combination of both should fill the page. AI!
 templ SidebarWithContent() {
+	<div class="flex h-screen w-full overflow-hidden">
+		@modules.Sidebar()
+		<main class="flex-1 overflow-y-auto p-6 bg-gray-50 dark:bg-gray-900">
+			<div class="container mx-auto">
+				{children...}
+			</div>
+		</main>
+	</div>
 }
