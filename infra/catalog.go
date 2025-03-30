@@ -18,13 +18,12 @@ type Infrastructure interface {
 }
 
 type Host struct {
-	// Please add an additional json struct tag that mimics the yaml tag. AI!
-	Name           string         `yaml:"name"`
-	IP             string         `yaml:"ip"`
-	PrivateIP      string         `yaml:"private_ip"`
-	Hostname       string         `yaml:"hostname"`
-	Tags           []string       `yaml:"tags"`
-	Infrastructure Infrastructure `yaml:"infrastructure,omitempty"`
+	Name           string         `yaml:"name" json:"name"`
+	IP             string         `yaml:"ip" json:"ip"`
+	PrivateIP      string         `yaml:"private_ip" json:"private_ip"`
+	Hostname       string         `yaml:"hostname" json:"hostname"`
+	Tags           []string       `yaml:"tags" json:"tags"`
+	Infrastructure Infrastructure `yaml:"infrastructure,omitempty" json:"infrastructure,omitempty"`
 }
 
 func (h Host) String() string {
@@ -125,23 +124,34 @@ func (h Host) MarshalYAML() (any, error) {
 
 // UnmarshalYAML implements the yaml.Unmarshaler interface
 func (h *Host) UnmarshalYAML(value *yaml.Node) error {
-	type alias Host
-	wrapped := struct {
-		alias
+	// Create a temporary struct without the custom unmarshaler
+	type HostAlias struct {
+		Name           string                 `yaml:"name"`
+		IP             string                 `yaml:"ip"`
+		PrivateIP      string                 `yaml:"private_ip"`
+		Hostname       string                 `yaml:"hostname"`
+		Tags           []string               `yaml:"tags"`
 		Infrastructure *infrastructureWrapper `yaml:"infrastructure,omitempty"`
-	}{}
-
-	if err := value.Decode(&wrapped); err != nil {
+	}
+	
+	var alias HostAlias
+	if err := value.Decode(&alias); err != nil {
 		return err
 	}
-
-	*h = Host(wrapped.alias)
-
-	if wrapped.Infrastructure != nil {
-		switch wrapped.Infrastructure.Provider {
+	
+	// Copy the basic fields
+	h.Name = alias.Name
+	h.IP = alias.IP
+	h.PrivateIP = alias.PrivateIP
+	h.Hostname = alias.Hostname
+	h.Tags = alias.Tags
+	
+	// Handle the infrastructure field
+	if alias.Infrastructure != nil {
+		switch alias.Infrastructure.Provider {
 		case "aws":
 			var vm amazon.VM
-			metadata, err := yaml.Marshal(wrapped.Infrastructure.Metadata)
+			metadata, err := yaml.Marshal(alias.Infrastructure.Metadata)
 			if err != nil {
 				return err
 			}
@@ -150,10 +160,10 @@ func (h *Host) UnmarshalYAML(value *yaml.Node) error {
 			}
 			h.Infrastructure = &vm
 		default:
-			return fmt.Errorf("unknown infrastructure provider: %s", wrapped.Infrastructure.Provider)
+			return fmt.Errorf("unknown infrastructure provider: %s", alias.Infrastructure.Provider)
 		}
 	}
-
+	
 	return nil
 }
 
@@ -179,23 +189,34 @@ func (h Host) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements the json.Unmarshaler interface
 func (h *Host) UnmarshalJSON(data []byte) error {
-	type alias Host
-	wrapped := struct {
-		alias
+	// Create a temporary struct without the custom unmarshaler
+	type HostAlias struct {
+		Name           string                 `json:"name"`
+		IP             string                 `json:"ip"`
+		PrivateIP      string                 `json:"private_ip"`
+		Hostname       string                 `json:"hostname"`
+		Tags           []string               `json:"tags"`
 		Infrastructure *infrastructureWrapper `json:"infrastructure,omitempty"`
-	}{}
-
-	if err := json.Unmarshal(data, &wrapped); err != nil {
+	}
+	
+	var alias HostAlias
+	if err := json.Unmarshal(data, &alias); err != nil {
 		return err
 	}
-
-	*h = Host(wrapped.alias)
-
-	if wrapped.Infrastructure != nil {
-		switch wrapped.Infrastructure.Provider {
+	
+	// Copy the basic fields
+	h.Name = alias.Name
+	h.IP = alias.IP
+	h.PrivateIP = alias.PrivateIP
+	h.Hostname = alias.Hostname
+	h.Tags = alias.Tags
+	
+	// Handle the infrastructure field
+	if alias.Infrastructure != nil {
+		switch alias.Infrastructure.Provider {
 		case "aws":
 			var vm amazon.VM
-			metadata, err := json.Marshal(wrapped.Infrastructure.Metadata)
+			metadata, err := json.Marshal(alias.Infrastructure.Metadata)
 			if err != nil {
 				return err
 			}
@@ -204,9 +225,9 @@ func (h *Host) UnmarshalJSON(data []byte) error {
 			}
 			h.Infrastructure = &vm
 		default:
-			return fmt.Errorf("unknown infrastructure provider: %s", wrapped.Infrastructure.Provider)
+			return fmt.Errorf("unknown infrastructure provider: %s", alias.Infrastructure.Provider)
 		}
 	}
-
+	
 	return nil
 }
