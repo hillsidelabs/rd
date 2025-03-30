@@ -18,6 +18,7 @@ type Infrastructure interface {
 }
 
 type Host struct {
+	// Please add an additional json struct tag that mimics the yaml tag. AI!
 	Name           string         `yaml:"name"`
 	IP             string         `yaml:"ip"`
 	PrivateIP      string         `yaml:"private_ip"`
@@ -63,14 +64,12 @@ func GetHostsFromFile(fn string) ([]Host, error) {
 		return nil, err
 	}
 
-	log.Printf("Loaded %s: \n%s", fn, string(out))
-
 	var hosts []Host
 	if err = yaml.Unmarshal(out, &hosts); err != nil {
 		log.Printf("Error unmarshaling YAML: %v", err)
 		return nil, err
 	}
-	
+
 	for i, h := range hosts {
 		log.Printf("Host %d: %s (%s)", i, h.Name, h.IP)
 	}
