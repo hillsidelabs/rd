@@ -3,6 +3,7 @@ package infra
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"os"
 	"strings"
 
@@ -17,12 +18,12 @@ type Infrastructure interface {
 }
 
 type Host struct {
-	Name           string         `yaml:"name" json:"name"`
-	IP             string         `yaml:"ip" json:"ip"`
-	PrivateIP      string         `yaml:"private_ip" json:"private_ip"`
-	Hostname       string         `yaml:"hostname" json:"hostname"`
-	Tags           []string       `yaml:"tags" json:"tags"`
-	Infrastructure Infrastructure `yaml:"infrastructure,omitempty" json:"infrastructure,omitempty"`
+	Name           string         `yaml:"name"`
+	IP             string         `yaml:"ip"`
+	PrivateIP      string         `yaml:"private_ip"`
+	Hostname       string         `yaml:"hostname"`
+	Tags           []string       `yaml:"tags"`
+	Infrastructure Infrastructure `yaml:"infrastructure,omitempty"`
 }
 
 func (h Host) String() string {
@@ -55,26 +56,42 @@ func (c *Catalog) GetTargets(name, ip, private string) ([]Host, error) {
 	return targets, nil
 }
 
-func GetHostsFromFile() ([]Host, error) {
-	out, err := os.ReadFile("hosts.yml")
+func GetHostsFromFile(fn string) ([]Host, error) {
+	out, err := os.ReadFile(fn)
 	if err != nil {
+		log.Println("Error reading hosts.yml:", err)
 		return nil, err
 	}
 
+	log.Println("Loaded hosts.yml: \n", string(out))
+
 	var hosts []Host
 	err = yaml.Unmarshal(out, &hosts)
+	for _, h := range hosts {
+		log.Println("Host: ", h.IP)
+	}
 	return hosts, err
 }
 
-func NewCatalog() (*Catalog, error) {
-	hosts, err := GetHostsFromFile()
-	if err != nil {
-		hosts, err = GetHostFromDOTerraform()
-		if err != nil {
-			return nil, err
-		}
+func NewCatalogFromFile(fn string) (*Catalog, error) {
+	if fn == "" {
+		return nil, fmt.Errorf("no filename given")
 	}
+
+	hosts, err := GetHostsFromFile(fn)
+	if err != nil {
+		// hosts, err = GetHostFromDOTerraform()
+		// if err != nil {
+		return nil, err
+		// }
+	}
+
+	log.Println("Hosts: ", hosts)
 	return &Catalog{Hosts: hosts}, nil
+}
+
+func NewCatalog() (*Catalog, error) {
+	return NewCatalogFromFile("hosts.yml")
 }
 
 // infrastructureWrapper is used for marshaling/unmarshaling Infrastructure
@@ -84,7 +101,7 @@ type infrastructureWrapper struct {
 }
 
 // MarshalYAML implements the yaml.Marshaler interface
-func (h Host) MarshalYAML() (interface{}, error) {
+func (h Host) MarshalYAML() (any, error) {
 	type alias Host
 	wrapped := struct {
 		alias
