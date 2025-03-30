@@ -1,10 +1,10 @@
 package web
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"github.com/hillsidelabs/rd/infra"
+	"github.com/hillsidelabs/rd/web/ui/pages"
 )
 
 func (s *Server) CatalogHandler() http.Handler {
@@ -15,6 +15,7 @@ func (s *Server) CatalogHandler() http.Handler {
 			return
 		}
 
-
+		component := pages.Catalog(catalog)
+		component.Render(r.Context(), w)
 	})
 }

@@ -2,11 +2,65 @@ package pages
 
 import (
 	"github.com/axzilla/templui/components"
+	"github.com/hillsidelabs/rd/infra"
 	"github.com/hillsidelabs/rd/web/ui/layouts"
 )
 
 templ Catalog(catalog *infra.Catalog) {
 	@layouts.BaseLayout() {
-					# List the available hosts based on the catalog. Use a Card from the templui project https://templui.io/docs/components/card to render each host with its information. AI!
+		<div class="container mx-auto py-8">
+			<h1 class="text-2xl font-bold mb-6">Infrastructure Hosts</h1>
+			<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+				for _, host := range catalog.Hosts {
+					@components.Card(components.CardProps{
+						Class: "h-full",
+					}) {
+						@components.CardHeader() {
+							@components.CardTitle() {
+								{host.Name}
+							}
+							@components.CardDescription() {
+								{host.Hostname}
+							}
+						}
+						@components.CardContent() {
+							<div class="space-y-2">
+								<div class="flex justify-between">
+									<span class="font-medium">IP Address:</span>
+									<span>{host.IP}</span>
+								</div>
+								<div class="flex justify-between">
+									<span class="font-medium">Private IP:</span>
+									<span>{host.PrivateIP}</span>
+								</div>
+								if len(host.Tags) > 0 {
+									<div class="mt-4">
+										<span class="font-medium">Tags:</span>
+										<div class="flex flex-wrap gap-2 mt-2">
+											for _, tag := range host.Tags {
+												<span class="px-2 py-1 bg-primary/10 text-primary rounded text-xs">{tag}</span>
+											}
+										</div>
+									</div>
+								}
+								if host.Infrastructure != nil {
+									<div class="mt-4">
+										<span class="font-medium">Provider:</span>
+										<span class="ml-2">{host.Infrastructure.Provider()}</span>
+									</div>
+								}
+							</div>
+						}
+						@components.CardFooter() {
+							@components.Button(components.ButtonProps{
+								Class: "w-full",
+							}) {
+								Connect
+							}
+						}
+					}
+				}
+			</div>
+		</div>
 	}
 }
