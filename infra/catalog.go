@@ -59,18 +59,22 @@ func (c *Catalog) GetTargets(name, ip, private string) ([]Host, error) {
 func GetHostsFromFile(fn string) ([]Host, error) {
 	out, err := os.ReadFile(fn)
 	if err != nil {
-		log.Println("Error reading hosts.yml:", err)
+		log.Printf("Error reading %s: %v", fn, err)
 		return nil, err
 	}
 
-	log.Println("Loaded hosts.yml: \n", string(out))
+	log.Printf("Loaded %s: \n%s", fn, string(out))
 
 	var hosts []Host
-	err = yaml.Unmarshal(out, &hosts)
-	for _, h := range hosts {
-		log.Println("Host: ", h.IP)
+	if err = yaml.Unmarshal(out, &hosts); err != nil {
+		log.Printf("Error unmarshaling YAML: %v", err)
+		return nil, err
 	}
-	return hosts, err
+	
+	for i, h := range hosts {
+		log.Printf("Host %d: %s (%s)", i, h.Name, h.IP)
+	}
+	return hosts, nil
 }
 
 func NewCatalogFromFile(fn string) (*Catalog, error) {
