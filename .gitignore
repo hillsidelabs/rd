@@ -3,3 +3,4 @@
 rd-server
 devenv.yml
 .vscode
+.aider*
