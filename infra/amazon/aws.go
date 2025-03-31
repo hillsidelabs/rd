@@ -344,7 +344,7 @@ func (vm *VM) Provider() string {
 
 // Metadata returns the AWS-specific metadata
 func (vm *VM) Metadata() any {
-	return map[string]interface{}{
+	return map[string]any{
 		"region":   vm.Config.Region,
 		"image_id": vm.ImageID,
 		"type":     vm.InstanceType,
