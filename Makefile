@@ -7,6 +7,7 @@ rd: $(SRC)
 
 rd-server: $(SRC)
 	go mod tidy
+	templ fmt .
 	go build ./cli/rd-server
 
 
@@ -19,7 +20,7 @@ templ:
 # Run air to detect any go file changes to re-build and re-run the server.
 server:
 	air \
-	--build.cmd "go build ./cli/rd-server" \
+	--build.cmd "make rd-server" \
 	--build.bin "./rd-server" \
 	--build.delay "100" \
 	--build.exclude_dir "node_modules" \
