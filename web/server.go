@@ -5,10 +5,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/a-h/templ"
-
 	"github.com/hillsidelabs/rd/web/assets"
-	"github.com/hillsidelabs/rd/web/ui/pages"
 )
 
 // Server represents the HTTP server configuration
@@ -30,7 +27,8 @@ func (s *Server) Start() error {
 	SetupAssetsRoutes(mux)
 
 	// Define a basic handler for the root path
-	mux.Handle("GET /", templ.Handler(pages.Landing()))
+	mux.Handle("GET /", s.CatalogHandler())
+	mux.Handle("GET /infrastructure", s.Infra())
 
 	// Log that the server is starting
 	log.Printf("Server starting on port %s", s.port)

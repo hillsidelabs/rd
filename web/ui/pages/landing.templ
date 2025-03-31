@@ -1,8 +1,8 @@
 package pages
 
 import (
-	"github.com/hillsidelabs/rd/web/ui/layouts"
 	"github.com/axzilla/templui/components"
+	"github.com/hillsidelabs/rd/web/ui/layouts"
 )
 
 templ Landing() {
@@ -21,12 +21,16 @@ templ Landing() {
 						Variant: "default",
 						Href:    "https://templui.io",
 						Target:  "_blank",
-					}) { Documentation }
+					}) {
+						Documentation 
+					}
 					@components.Button(components.ButtonProps{
 						Variant: "outline",
 						Href:    "https://github.com/axzilla/templui",
 						Target:  "_blank",
-					}) { GitHub }
+					}) {
+						GitHub 
+					}
 				</div>
 				<p class="text-sm text-muted-foreground mt-4">
 					Questions? Join our <a href="https://github.com/axzilla/templui/discussions" target="_blank" class="text-primary hover:underline">community discussions</a> 👋

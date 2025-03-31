@@ -1,9 +1,6 @@
 package layouts
 
-import (
-	"github.com/hillsidelabs/rd/web/ui/modules"
-	"github.com/axzilla/templui/helpers"
-)
+import "github.com/axzilla/templui/helpers"
 
 templ ThemeSwitcherScript() {
 	{{ handle := templ.NewOnceHandle() }}
@@ -48,8 +45,9 @@ templ BaseLayout() {
 			x-data="themeHandler"
 			x-bind:class="themeClasses"
 		>
-			@modules.Navbar()
-			{ children... }
+			@SidebarWithContent() {
+				{ children... }
+			}
 		</body>
 	</html>
 }
