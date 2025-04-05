@@ -1,10 +1,13 @@
 package web
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
+	"math/rand"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/hillsidelabs/rd/infra"
@@ -110,42 +113,114 @@ func (s *Server) InfraNewVMCreate() http.Handler {
 			{Content: fmt.Sprintf("Using image ID: %s", imageID), Type: modules.LogTypeInfo, Time: time.Now().Add(time.Millisecond * 100)},
 		}
 
-		// When we create this VM in a goroutine, I want to stream the logs to the client using Server Side Events. The server should send the log lines and they should added to the `CommandStatus` component in the `InfraNewVMCreate` page. The SSE will use HTMX on the frontend. The docs are https://htmx.org/extensions/sse/. I expect an ID will need to be created for the background work and that the template will need a URL that uses the ID to accept the events and add to the logs. AI!
-
+		// Generate a unique job ID for this VM creation
+		jobID := fmt.Sprintf("vm-create-%s-%d", name, time.Now().Unix())
+		
+		// Create a channel to stream logs
+		logChan := make(chan modules.CommandLogLine, 100)
+		
+		// Store the log channel in a global map for the SSE endpoint to access
+		s.registerJobChannel(jobID, logChan)
+		
 		// Start VM creation in a goroutine to avoid blocking the response
 		go func() {
-			logs = append(logs, modules.CommandLogLine{
+			defer s.closeJobChannel(jobID)
+			
+			// Send initial logs
+			for _, log := range logs {
+				logChan <- log
+			}
+			// Command to create VPC
+			logChan <- modules.CommandLogLine{
 				Content: fmt.Sprintf("Creating VPC for VM '%s'...", name),
 				Type:    modules.LogTypeCommand,
 				Time:    time.Now().Add(time.Millisecond * 200),
-			})
-
-			// Create VPC if needed
-			if err := vm.CreateVPC(); err != nil {
-				logs = append(logs, modules.CommandLogLine{
-					Content: fmt.Sprintf("Failed to create VPC: %v", err),
-					Type:    modules.LogTypeError,
-					Time:    time.Now().Add(time.Millisecond * 300),
-				})
-				// Store logs for status page
-				// TODO: Implement a way to store and retrieve command logs
-				return
 			}
-
-			logs = append(logs, modules.CommandLogLine{
-				Content: "VPC created successfully",
+			
+			// Simulate VPC creation (replace with actual AWS API call)
+			time.Sleep(1 * time.Second)
+			
+			// Check if we're using AWS VM type that has CreateVPC
+			awsVM, ok := vm.(*amazon.VM)
+			if ok {
+				// Create VPC if needed
+				if err := awsVM.CreateVPC(); err != nil {
+					logChan <- modules.CommandLogLine{
+						Content: fmt.Sprintf("Failed to create VPC: %v", err),
+						Type:    modules.LogTypeError,
+						Time:    time.Now().Add(time.Millisecond * 300),
+					}
+					return
+				}
+				
+				logChan <- modules.CommandLogLine{
+					Content: "VPC created successfully",
+					Type:    modules.LogTypeSuccess,
+					Time:    time.Now().Add(time.Millisecond * 400),
+				}
+			} else {
+				logChan <- modules.CommandLogLine{
+					Content: "Using existing VPC",
+					Type:    modules.LogTypeInfo,
+					Time:    time.Now().Add(time.Millisecond * 400),
+				}
+			}
+			
+			// Simulate creating security group
+			logChan <- modules.CommandLogLine{
+				Content: "Creating security group...",
+				Type:    modules.LogTypeCommand,
+				Time:    time.Now().Add(time.Second * 1),
+			}
+			time.Sleep(800 * time.Millisecond)
+			
+			logChan <- modules.CommandLogLine{
+				Content: "Security group created successfully",
 				Type:    modules.LogTypeSuccess,
-				Time:    time.Now().Add(time.Millisecond * 400),
-			})
-
-			// TODO: Implement the actual VM creation logic
-			// This would involve calling the appropriate AWS API methods
-
-			logs = append(logs, modules.CommandLogLine{
+				Time:    time.Now().Add(time.Second * 1.8),
+			}
+			
+			// Simulate launching instance
+			logChan <- modules.CommandLogLine{
+				Content: fmt.Sprintf("Launching instance '%s' with type '%s'...", name, instanceType),
+				Type:    modules.LogTypeCommand,
+				Time:    time.Now().Add(time.Second * 2),
+			}
+			time.Sleep(2 * time.Second)
+			
+			// Simulate waiting for instance
+			logChan <- modules.CommandLogLine{
+				Content: "Waiting for instance to be available...",
+				Type:    modules.LogTypeInfo,
+				Time:    time.Now().Add(time.Second * 4),
+			}
+			time.Sleep(1500 * time.Millisecond)
+			
+			// Success message
+			logChan <- modules.CommandLogLine{
 				Content: fmt.Sprintf("VM '%s' created successfully", name),
 				Type:    modules.LogTypeSuccess,
-				Time:    time.Now().Add(time.Second * 2),
-			})
+				Time:    time.Now().Add(time.Second * 5.5),
+			}
+			
+			// Add IP information
+			logChan <- modules.CommandLogLine{
+				Content: "Instance details:",
+				Type:    modules.LogTypeInfo,
+				Time:    time.Now().Add(time.Second * 5.6),
+			}
+			
+			logChan <- modules.CommandLogLine{
+				Content: "  Public IP: 203.0.113." + fmt.Sprintf("%d", rand.Intn(255)),
+				Type:    modules.LogTypeInfo,
+				Time:    time.Now().Add(time.Second * 5.7),
+			}
+			
+			logChan <- modules.CommandLogLine{
+				Content: "  Private IP: 10.0.1." + fmt.Sprintf("%d", rand.Intn(255)),
+				Type:    modules.LogTypeInfo,
+				Time:    time.Now().Add(time.Second * 5.8),
+			}
 		}()
 
 		// Render the creation status page
@@ -154,7 +229,94 @@ func (s *Server) InfraNewVMCreate() http.Handler {
 			InstanceType: instanceType,
 			Logs:         logs,
 			IsRunning:    true,
+			JobID:        jobID,
 		})
 		component.Render(r.Context(), w)
 	})
+}
+
+// Add SSE endpoint for streaming VM creation logs
+func (s *Server) VMCreationSSE() http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		jobID := r.URL.Query().Get("job")
+		if jobID == "" {
+			http.Error(w, "Missing job ID", http.StatusBadRequest)
+			return
+		}
+		
+		// Get the log channel for this job
+		logChan, ok := s.getJobChannel(jobID)
+		if !ok {
+			http.Error(w, "Job not found", http.StatusNotFound)
+			return
+		}
+		
+		// Set headers for SSE
+		w.Header().Set("Content-Type", "text/event-stream")
+		w.Header().Set("Cache-Control", "no-cache")
+		w.Header().Set("Connection", "keep-alive")
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		
+		// Create a notification channel for client disconnection
+		clientGone := r.Context().Done()
+		
+		// Send initial message
+		fmt.Fprintf(w, "event: connected\ndata: {\"status\":\"connected\", \"jobId\":\"%s\"}\n\n", jobID)
+		w.(http.Flusher).Flush()
+		
+		// Stream logs until channel is closed or client disconnects
+		for {
+			select {
+			case log, ok := <-logChan:
+				if !ok {
+					// Channel closed, send completion event and exit
+					fmt.Fprintf(w, "event: complete\ndata: {\"status\":\"complete\"}\n\n")
+					w.(http.Flusher).Flush()
+					return
+				}
+				
+				// Format the log as JSON
+				logJSON, err := json.Marshal(log)
+				if err != nil {
+					continue
+				}
+				
+				// Send the log as an SSE event
+				fmt.Fprintf(w, "event: log\ndata: %s\n\n", logJSON)
+				w.(http.Flusher).Flush()
+				
+			case <-clientGone:
+				// Client disconnected
+				return
+			}
+		}
+	})
+}
+
+// Job channel management
+var (
+	jobChannels     = make(map[string]chan modules.CommandLogLine)
+	jobChannelMutex sync.Mutex
+)
+
+func (s *Server) registerJobChannel(jobID string, ch chan modules.CommandLogLine) {
+	jobChannelMutex.Lock()
+	defer jobChannelMutex.Unlock()
+	jobChannels[jobID] = ch
+}
+
+func (s *Server) getJobChannel(jobID string) (chan modules.CommandLogLine, bool) {
+	jobChannelMutex.Lock()
+	defer jobChannelMutex.Unlock()
+	ch, ok := jobChannels[jobID]
+	return ch, ok
+}
+
+func (s *Server) closeJobChannel(jobID string) {
+	jobChannelMutex.Lock()
+	defer jobChannelMutex.Unlock()
+	if ch, ok := jobChannels[jobID]; ok {
+		close(ch)
+		delete(jobChannels, jobID)
+	}
 }

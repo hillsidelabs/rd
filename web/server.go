@@ -31,6 +31,7 @@ func (s *Server) Start() error {
 	mux.Handle("GET /infra", s.Infra())
 	mux.Handle("GET /infra/newvm", s.InfraNewVM())
 	mux.Handle("POST /infra/newvm", s.InfraNewVMCreate())
+	mux.Handle("GET /infra/vm/events", s.VMCreationSSE())
 
 	// Log that the server is starting
 	log.Printf("Server starting on port %s", s.port)
