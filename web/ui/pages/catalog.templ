@@ -13,7 +13,7 @@ templ Catalog(catalog *infra.Catalog) {
 			<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 				for _, host := range catalog.Hosts {
 					@components.Card(components.CardProps{
-						Class: "h-full max-w-md mx-auto",
+						Class: "h-full w-full max-w-md mx-auto",
 					}) {
 						@components.CardHeader(components.CardHeaderProps{}) {
 							@components.CardTitle(components.CardTitleProps{}) {
