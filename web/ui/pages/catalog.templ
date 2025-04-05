@@ -1,6 +1,7 @@
 package pages
 
 import (
+	"fmt"
 	"github.com/axzilla/templui/components"
 	"github.com/hillsidelabs/rd/infra"
 	"github.com/hillsidelabs/rd/web/ui/layouts"
@@ -44,9 +45,23 @@ templ Catalog(catalog *infra.Catalog) {
 									</div>
 								}
 								if host.Infrastructure != nil {
-									<div class="mt-4">
-										<span class="font-medium">Provider:</span>
-										<span class="ml-2">{ host.Infrastructure.Provider() }</span>
+									<div class="mt-4 space-y-2">
+										<div class="flex justify-between">
+											<span class="font-medium">Provider:</span>
+											<span class="px-2 py-0.5 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300 rounded text-xs">
+												{ host.Infrastructure.Provider() }
+											</span>
+										</div>
+										if metadata := host.Infrastructure.Metadata(); metadata != nil {
+											if metaMap, ok := metadata.(map[string]any); ok {
+												for key, value := range metaMap {
+													<div class="flex justify-between text-sm">
+														<span class="text-muted-foreground">{ key }:</span>
+														<span>{ fmt.Sprint(value) }</span>
+													</div>
+												}
+											}
+										}
 									</div>
 								}
 							</div>

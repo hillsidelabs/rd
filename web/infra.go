@@ -2,6 +2,7 @@ package web
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -72,12 +73,45 @@ func (s *Server) InfraNewVMCreate() http.Handler {
 			}
 		}
 
-		// Create VM using AWS package
-		imageID := "ami-0c55b159cbfafe1f0" // Default Amazon Linux 2 AMI - this should be configurable
-		vm := infra.amazon.NewVM(name, imageID, instanceType, tags)
+		// Load configuration
+		config, err := infra.LoadConfig("")
+		if err != nil {
+			log.Printf("Failed to load config: %v, using defaults", err)
+			config = infra.DefaultConfig()
+		}
 		
-		if vpcName != "" {
-			vm.VPC = vpcName
+		// Get latest AMI ID based on configuration
+		var imageID string
+		if config.Provider == infra.ProviderAWS {
+			latestAMI, err := config.GetLatestAMI()
+			if err != nil {
+				log.Printf("Failed to get latest AMI: %v, using fallback", err)
+				imageID = "ami-0c55b159cbfafe1f0" // Fallback AMI
+			} else {
+				imageID = latestAMI
+			}
+		} else {
+			// For DigitalOcean, we'll use the image slug from config
+			imageID = config.DO.ImageSlug
+		}
+		
+		// Create VM using the appropriate provider
+		var vm infra.Infrastructure
+		if config.Provider == infra.ProviderAWS {
+			awsVM := amazon.NewVM(name, imageID, instanceType, tags)
+			
+			if vpcName != "" {
+				awsVM.VPC = vpcName
+			} else if config.AWS.VPC != "default" {
+				awsVM.VPC = config.AWS.VPC
+			}
+			
+			vm = awsVM
+		} else {
+			// TODO: Implement DigitalOcean VM creation
+			// For now, fall back to AWS
+			log.Printf("DigitalOcean provider not yet implemented, falling back to AWS")
+			vm = amazon.NewVM(name, imageID, instanceType, tags)
 		}
 
 		// Create command logs for the UI
