@@ -36,8 +36,10 @@ type CommandStatusProps struct {
 	AutoScroll  bool
 	ShowCopyBtn bool
 	Class       string
+	JobID       string
 }
 
+// Update this component to use HTMX SSE to update the content when a JobID is present in the props. The URL should be `/infra/vm/event/$JobID`. AI!
 templ CommandStatus(props CommandStatusProps) {
 	<div
 		id={ props.ID }

@@ -12,6 +12,7 @@ type InfraNewVMCreateProps struct {
 	Logs         []modules.CommandLogLine
 	IsRunning    bool
 	ExitCode     int
+	JobID        string
 }
 
 templ InfraNewVMCreate(props InfraNewVMCreateProps) {
