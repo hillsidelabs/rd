@@ -50,70 +50,27 @@ templ InfraNewVM() {
 							</div>
 						</div>
 						<div class="space-y-4">
-							// Remove the Provider Configuration forms. AI!
-							<h3 class="text-lg font-medium">Provider Configuration</h3>
+							<h3 class="text-lg font-medium">SSH Configuration</h3>
 							<div>
-								@components.Label(components.LabelProps{For: "vm-provider"}) {
-									Cloud Provider
+								@components.Label(components.LabelProps{For: "vm-ssh-key"}) {
+									SSH Key
 								}
-								@components.Select(components.SelectProps{}) {
-									@components.SelectTrigger(components.SelectTriggerProps{ID: "vm-provider"}) {
-										@components.SelectValue(components.SelectValueProps{Placeholder: "Select provider"})
-									}
-									@components.SelectContent(components.SelectContentProps{}) {
-										@components.SelectItem(components.SelectItemProps{Value: "aws"}) {
-											AWS
-										}
-										@components.SelectItem(components.SelectItemProps{Value: "digitalocean"}) {
-											Digital Ocean
-										}
-									}
-								}
-								<input type="hidden" name="provider" id="provider-value"/>
+								@components.Input(components.InputProps{
+									ID:          "vm-ssh-key",
+									Name:        "ssh_key",
+									Placeholder: "Path to SSH public key",
+								})
 							</div>
 							<div>
-								@components.Label(components.LabelProps{For: "vm-region"}) {
-									Region
+								@components.Label(components.LabelProps{For: "vm-user"}) {
+									SSH User
 								}
-								@components.Select(components.SelectProps{}) {
-									@components.SelectTrigger(components.SelectTriggerProps{ID: "vm-region"}) {
-										@components.SelectValue(components.SelectValueProps{Placeholder: "Select region"})
-									}
-									@components.SelectContent(components.SelectContentProps{}) {
-										@components.SelectItem(components.SelectItemProps{Value: "us-west-2"}) {
-											US West (Oregon)
-										}
-										@components.SelectItem(components.SelectItemProps{Value: "us-east-1"}) {
-											US East (N. Virginia)
-										}
-										@components.SelectItem(components.SelectItemProps{Value: "eu-west-1"}) {
-											EU (Ireland)
-										}
-									}
-								}
-								<input type="hidden" name="region" id="region-value"/>
-							</div>
-							<div>
-								@components.Label(components.LabelProps{For: "vm-type"}) {
-									Instance Type
-								}
-								@components.Select(components.SelectProps{}) {
-									@components.SelectTrigger(components.SelectTriggerProps{ID: "vm-type"}) {
-										@components.SelectValue(components.SelectValueProps{Placeholder: "Select instance type"})
-									}
-									@components.SelectContent(components.SelectContentProps{}) {
-										@components.SelectItem(components.SelectItemProps{Value: "t2.micro"}) {
-											t2.micro (1 vCPU, 1 GiB RAM)
-										}
-										@components.SelectItem(components.SelectItemProps{Value: "t2.small"}) {
-											t2.small (1 vCPU, 2 GiB RAM)
-										}
-										@components.SelectItem(components.SelectItemProps{Value: "t2.medium"}) {
-											t2.medium (2 vCPU, 4 GiB RAM)
-										}
-									}
-								}
-								<input type="hidden" name="instance_type" id="instance-type-value"/>
+								@components.Input(components.InputProps{
+									ID:          "vm-user",
+									Name:        "ssh_user",
+									Placeholder: "root",
+									Value:       "root",
+								})
 							</div>
 						</div>
 					</div>
