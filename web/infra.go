@@ -26,3 +26,12 @@ func (s *Server) InfraNewVM() http.Handler {
 		component.Render(r.Context(), w)
 	})
 }
+
+func (s *Server) InfraNewVMCreate() http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// We want to use the aws package to create a VM based on the forms defined in `web/ui/pages/infra/new_vm.go`. AI!
+
+		component := pages.InfraNewVMCreate()
+		component.Render(r.Context(), w)
+	})
+}
