@@ -8,6 +8,7 @@ rd: $(SRC)
 rd-server: $(SRC)
 	go mod tidy
 	templ fmt .
+	templ generate
 	go build ./cli/rd-server
 
 
