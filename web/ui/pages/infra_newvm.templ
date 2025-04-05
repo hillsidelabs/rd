@@ -161,24 +161,14 @@ templ InfraNewVM() {
 			</div>
 		</div>
 		<script>
-			// Handle select components to update hidden inputs
+			// Form validation and submission handling
 			document.addEventListener('DOMContentLoaded', () => {
-				// Helper to sync select values to hidden inputs
-				function setupSelectSync(selectId, hiddenId) {
-					const select = document.getElementById(selectId);
-					const hidden = document.getElementById(hiddenId);
-
-					if (select && hidden) {
-						select.addEventListener('change', (e) => {
-							hidden.value = e.target.value;
-						});
-					}
-				}
-
-				// Setup syncing for all select components
-				setupSelectSync('vm-provider', 'provider-value');
-				setupSelectSync('vm-region', 'region-value');
-				setupSelectSync('vm-type', 'instance-type-value');
+				const form = document.querySelector('form');
+				
+				form.addEventListener('submit', (e) => {
+					// Basic form validation could be added here
+					console.log('Form submitted');
+				});
 			});
 		</script>
 	}
