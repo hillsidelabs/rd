@@ -14,7 +14,7 @@ templ InfraNewVM() {
 			</div>
 			<div class="bg-card border rounded-lg p-6">
 				<form action="/infra/create" method="POST" class="space-y-6">
-					<div class="grid gap-6 md:grid-cols-2">
+					<div class="grid gap-6 md:grid-cols-1">
 						<div class="space-y-4">
 							<h3 class="text-lg font-medium">Basic Information</h3>
 							<div>
@@ -46,30 +46,6 @@ templ InfraNewVM() {
 									ID:          "vm-tags",
 									Name:        "tags",
 									Placeholder: "web,production,app",
-								})
-							</div>
-						</div>
-						<div class="space-y-4">
-							<h3 class="text-lg font-medium">SSH Configuration</h3>
-							<div>
-								@components.Label(components.LabelProps{For: "vm-ssh-key"}) {
-									SSH Key
-								}
-								@components.Input(components.InputProps{
-									ID:          "vm-ssh-key",
-									Name:        "ssh_key",
-									Placeholder: "Path to SSH public key",
-								})
-							</div>
-							<div>
-								@components.Label(components.LabelProps{For: "vm-user"}) {
-									SSH User
-								}
-								@components.Input(components.InputProps{
-									ID:          "vm-user",
-									Name:        "ssh_user",
-									Placeholder: "root",
-									Value:       "root",
 								})
 							</div>
 						</div>
@@ -133,7 +109,7 @@ templ InfraNewVM() {
 			// Form validation and submission handling
 			document.addEventListener('DOMContentLoaded', () => {
 				const form = document.querySelector('form');
-				
+
 				form.addEventListener('submit', (e) => {
 					// Basic form validation could be added here
 					console.log('Form submitted');
