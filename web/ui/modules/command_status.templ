@@ -1,87 +1,217 @@
 package modules
 
+import (
+	"fmt"
+	"time"
+
+	"github.com/axzilla/templui/components"
+)
+
+type LogType string
+
+const (
+	LogTypeStdout  LogType = "stdout"
+	LogTypeStderr  LogType = "stderr"
+	LogTypeInfo    LogType = "info"
+	LogTypeError   LogType = "error"
+	LogTypeSuccess LogType = "success"
+	LogTypeWarning LogType = "warning"
+	LogTypeCommand LogType = "command"
+)
+
+type CommandLogLine struct {
+	Content string
+	Type    LogType
+	Time    time.Time
+}
+
 type CommandStatusProps struct {
-	ID            string
-	Title         string
-	Command       string
-	Status        string // "running", "success", "error", "pending"
-	Logs          []string
-	MaxHeight     string
-	AutoScroll    bool
-	ShowTimestamp bool
+	ID          string
+	Title       string
+	Command     string
+	Logs        []CommandLogLine
+	IsRunning   bool
+	ExitCode    int
+	MaxHeight   string
+	AutoScroll  bool
+	ShowCopyBtn bool
+	Class       string
 }
 
 templ CommandStatus(props CommandStatusProps) {
-	<div id={ props.ID } class="command-status rounded-md border overflow-hidden">
-		<div class="flex items-center justify-between bg-muted p-2 border-b">
-			<div class="font-medium truncate">{ props.Title }</div>
+	<div
+		id={ props.ID }
+		class={ "terminal-container rounded-md border overflow-hidden " + props.Class }
+		data-autoscroll={ boolToString(props.AutoScroll) }
+	>
+		<div class="bg-muted/50 px-4 py-2 border-b flex justify-between items-center">
 			<div class="flex items-center gap-2">
-				if props.Status == "running" {
-					<span class="inline-flex items-center px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300">
-						<span class="mr-1 h-2 w-2 rounded-full bg-blue-500 animate-pulse"></span>
-						Running
-					</span>
-				} else if props.Status == "success" {
-					<span class="inline-flex items-center px-2 py-1 text-xs rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">
-						<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1">
-							<path d="M20 6L9 17l-5-5"></path>
-						</svg>
-						Success
-					</span>
-				} else if props.Status == "error" {
-					<span class="inline-flex items-center px-2 py-1 text-xs rounded-full bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300">
-						<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1">
-							<path d="M18 6L6 18M6 6l12 12"></path>
-						</svg>
-						Error
-					</span>
-				} else if props.Status == "pending" {
-					<span class="inline-flex items-center px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300">
-						<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1">
-							<path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path>
-						</svg>
-						Pending
-					</span>
+				if props.IsRunning {
+					<div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+				} else if props.ExitCode == 0 {
+					<div class="w-2 h-2 rounded-full bg-green-500"></div>
+				} else {
+					<div class="w-2 h-2 rounded-full bg-red-500"></div>
 				}
+				<h3 class="font-medium">{ props.Title }</h3>
+			</div>
+			<div class="text-xs text-muted-foreground font-mono">
+				{ props.Command }
 			</div>
 		</div>
-		<div class="p-2 bg-black text-white font-mono text-sm">
-			if props.Command != "" {
-				<div class="pb-2 text-green-400">
-					<span class="text-blue-400">$</span> { props.Command }
+		<div
+			class="bg-black text-white font-mono text-sm p-4 overflow-y-auto terminal-logs"
+			style={ "max-height:" + getMaxHeight(props.MaxHeight) }
+		>
+			for _, log := range props.Logs {
+				<div class={ getLogLineClass(log.Type) }>
+					if !log.Time.IsZero() {
+						<span class="text-gray-500 mr-2">{ formatTime(log.Time) }</span>
+					}
+					if log.Type == LogTypeCommand {
+						<span class="text-blue-400">$</span> <span class="text-green-400">{ log.Content }</span>
+					} else {
+						<span>{ log.Content }</span>
+					}
 				</div>
 			}
-			<div
-				class="terminal-output overflow-y-auto whitespace-pre-wrap"
-				style={ "max-height:" + props.MaxHeight }
-				x-data="{ autoScroll: props.AutoScroll }"
-				x-init="$nextTick(() => { if(autoScroll) $el.scrollTop = $el.scrollHeight; })"
-			>
-				for _, log := range props.Logs {
-					<div class="terminal-line">
-						if props.ShowTimestamp {
-							<span class="text-gray-500">[12:34:56]</span>
+			if props.IsRunning {
+				<div class="animate-pulse">
+					<span class="text-green-400">$</span> <span class="animate-blink">_</span>
+				</div>
+			}
+		</div>
+		if !props.IsRunning {
+			<div class="bg-muted/30 px-4 py-2 border-t text-sm flex justify-between">
+				<span>Exit code: { intToString(props.ExitCode) }</span>
+				if props.ShowCopyBtn {
+					<div>
+						@components.Button(components.ButtonProps{
+							Size:    components.ButtonSizeSmall,
+							Variant: components.ButtonVariantOutline,
+							Class:   "h-7",
+							OnClick: "copyTerminalOutput('" + props.ID + "')",
+						}) {
+							Copy Output
 						}
-						{ log }
 					</div>
 				}
 			</div>
-		</div>
+		}
 	</div>
+	<style>
+		.terminal-logs {
+			line-height: 1.4;
+		}
+		@keyframes blink {
+			0%, 100% { opacity: 1; }
+			50% { opacity: 0; }
+		}
+		.animate-blink {
+			animation: blink 1s step-end infinite;
+		}
+	</style>
+	<script>
+		document.addEventListener('DOMContentLoaded', () => {
+			// Auto-scroll functionality
+			const terminals = document.querySelectorAll('[data-autoscroll="true"] .terminal-logs');
+			terminals.forEach(terminal => {
+				terminal.scrollTop = terminal.scrollHeight;
+				
+				// Set up an observer to auto-scroll when content changes
+				const observer = new MutationObserver(() => {
+					terminal.scrollTop = terminal.scrollHeight;
+				});
+				
+				observer.observe(terminal, { childList: true, subtree: true });
+			});
+			
+			// Define copy function if it doesn't exist
+			if (typeof window.copyTerminalOutput !== 'function') {
+				window.copyTerminalOutput = function(id) {
+					const terminal = document.querySelector('#' + id + ' .terminal-logs');
+					if (!terminal) return;
+					
+					// Get text content without formatting
+					const text = Array.from(terminal.querySelectorAll('div'))
+						.map(line => line.textContent.trim())
+						.join('\n');
+					
+					// Copy to clipboard
+					navigator.clipboard.writeText(text).then(() => {
+						// Show a temporary "Copied!" tooltip
+						const btn = document.querySelector('#' + id + ' button');
+						const originalText = btn.textContent;
+						btn.textContent = 'Copied!';
+						setTimeout(() => {
+							btn.textContent = originalText;
+						}, 2000);
+					});
+				}
+			}
+		});
+	</script>
 }
 
-// Example usage:
-// @modules.CommandStatus(modules.CommandStatusProps{
-//   ID: "deploy-command",
-//   Title: "Deploying to Production",
-//   Command: "kubectl apply -f deployment.yaml",
-//   Status: "running",
-//   Logs: []string{
-//     "Starting deployment...",
-//     "Creating resources...",
-//     "Waiting for pods to be ready...",
-//   },
-//   MaxHeight: "300px",
-//   AutoScroll: true,
-//   ShowTimestamp: true,
-// })
+// Example usage of the component
+templ CommandStatusExample() {
+	@CommandStatus(CommandStatusProps{
+		ID:          "example-terminal",
+		Title:       "Deploy Command",
+		Command:     "ssh user@server 'docker-compose up -d'",
+		IsRunning:   true,
+		AutoScroll:  true,
+		ShowCopyBtn: true,
+		MaxHeight:   "300px",
+		Logs: []CommandLogLine{
+			{Content: "ssh user@server 'docker-compose up -d'", Type: LogTypeCommand, Time: time.Now().Add(-10 * time.Second)},
+			{Content: "Connecting to server...", Type: LogTypeInfo, Time: time.Now().Add(-8 * time.Second)},
+			{Content: "SSH connection established", Type: LogTypeSuccess, Time: time.Now().Add(-6 * time.Second)},
+			{Content: "Running docker-compose up -d", Type: LogTypeInfo, Time: time.Now().Add(-5 * time.Second)},
+			{Content: "Creating network \"app_default\" with the default driver", Type: LogTypeStdout, Time: time.Now().Add(-4 * time.Second)},
+			{Content: "Creating app_db_1 ... done", Type: LogTypeStdout, Time: time.Now().Add(-3 * time.Second)},
+			{Content: "Creating app_redis_1 ... done", Type: LogTypeStdout, Time: time.Now().Add(-2 * time.Second)},
+			{Content: "Creating app_web_1 ... done", Type: LogTypeStdout, Time: time.Now().Add(-1 * time.Second)},
+		},
+	})
+}
+
+// Helper functions
+func getMaxHeight(height string) string {
+	if height == "" {
+		return "400px"
+	}
+	return height
+}
+
+func getLogLineClass(logType LogType) string {
+	switch logType {
+	case LogTypeError:
+		return "text-red-400"
+	case LogTypeSuccess:
+		return "text-green-400"
+	case LogTypeInfo:
+		return "text-blue-400"
+	case LogTypeStderr:
+		return "text-yellow-400"
+	case LogTypeWarning:
+		return "text-orange-400"
+	default:
+		return ""
+	}
+}
+
+func boolToString(b bool) string {
+	if b {
+		return "true"
+	}
+	return "false"
+}
+
+func intToString(i int) string {
+	return fmt.Sprintf("%d", i)
+}
+
+func formatTime(t time.Time) string {
+	return t.Format("15:04:05")
+}
