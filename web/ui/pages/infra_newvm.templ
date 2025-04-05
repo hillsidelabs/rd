@@ -1,86 +1,184 @@
 package pages
 
-import "github.com/hillsidelabs/rd/web/ui/layouts"
+import (
+	"github.com/axzilla/templui/components"
+	"github.com/hillsidelabs/rd/web/ui/layouts"
+)
 
 templ InfraNewVM() {
 	@layouts.BaseLayout() {
-		<div class="container mx-auto py-8 px-4 max-w-4xl">
-			<h1 class="text-2xl font-bold mb-6">Create New VM</h1>
-			<div class="bg-card rounded-lg shadow p-6 border">
-				<form class="space-y-6">
-					<!-- Basic Information -->
-					<div>
-						<h3 class="text-lg font-medium mb-4">Basic Information</h3>
-						<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-							<div>
-								<label for="vm-name" class="block text-sm font-medium mb-1">Name</label>
-								<input type="text" id="vm-name" class="w-full px-3 py-2 border rounded-md" placeholder="Enter VM name"/>
-							</div>
-							<div>
-								<label for="vm-provider" class="block text-sm font-medium mb-1">Provider</label>
-								<select id="vm-provider" class="w-full px-3 py-2 border rounded-md">
-									<option value="aws">AWS</option>
-									<option value="digitalocean">Digital Ocean</option>
-								</select>
-							</div>
-						</div>
-					</div>
-					<!-- Instance Configuration -->
-					<div>
-						<h3 class="text-lg font-medium mb-4">Instance Configuration</h3>
-						<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-							<div>
-								<label for="vm-type" class="block text-sm font-medium mb-1">Instance Type</label>
-								<select id="vm-type" class="w-full px-3 py-2 border rounded-md">
-									<option value="t2.micro">t2.micro</option>
-									<option value="t2.small">t2.small</option>
-									<option value="t2.medium">t2.medium</option>
-								</select>
-							</div>
-							<div>
-								<label for="vm-region" class="block text-sm font-medium mb-1">Region</label>
-								<select id="vm-region" class="w-full px-3 py-2 border rounded-md">
-									<option value="us-west-2">US West (Oregon)</option>
-									<option value="us-east-1">US East (N. Virginia)</option>
-									<option value="eu-west-1">EU (Ireland)</option>
-								</select>
-							</div>
-						</div>
-					</div>
-					<!-- Networking -->
-					<div>
-						<h3 class="text-lg font-medium mb-4">Networking</h3>
+		<div class="container mx-auto py-8 px-4 max-w-3xl">
+			<div class="mb-6">
+				<h1 class="text-2xl font-bold">Create New Virtual Machine</h1>
+				<p class="text-muted-foreground mt-2">Configure and deploy a new infrastructure host</p>
+			</div>
+			<div class="bg-card border rounded-lg p-6">
+				<form action="/infra/create" method="POST" class="space-y-6">
+					<div class="grid gap-6 md:grid-cols-2">
 						<div class="space-y-4">
+							<h3 class="text-lg font-medium">Basic Information</h3>
 							<div>
-								<label for="vm-vpc" class="block text-sm font-medium mb-1">VPC</label>
-								<select id="vm-vpc" class="w-full px-3 py-2 border rounded-md">
-									<option value="default">Default VPC</option>
-									<option value="create-new">Create New VPC</option>
-								</select>
+								@components.Label(components.LabelProps{For: "vm-name"}) {
+									Name
+								}
+								@components.Input(components.InputProps{
+									ID:          "vm-name",
+									Name:        "name",
+									Placeholder: "Enter VM name",
+									Required:    true,
+								})
 							</div>
 							<div>
-								<label for="vm-subnet" class="block text-sm font-medium mb-1">Subnet</label>
-								<select id="vm-subnet" class="w-full px-3 py-2 border rounded-md">
-									<option value="default">Default Subnet</option>
-								</select>
+								@components.Label(components.LabelProps{For: "vm-hostname"}) {
+									Hostname
+								}
+								@components.Input(components.InputProps{
+									ID:          "vm-hostname",
+									Name:        "hostname",
+									Placeholder: "server-hostname",
+								})
+							</div>
+							<div>
+								@components.Label(components.LabelProps{For: "vm-tags"}) {
+									Tags (comma separated)
+								}
+								@components.Input(components.InputProps{
+									ID:          "vm-tags",
+									Name:        "tags",
+									Placeholder: "web,production,app",
+								})
+							</div>
+						</div>
+						<div class="space-y-4">
+							<h3 class="text-lg font-medium">Provider Configuration</h3>
+							<div>
+								@components.Label(components.LabelProps{For: "vm-provider"}) {
+									Cloud Provider
+								}
+								@components.Select() {
+									@components.SelectTrigger(components.SelectTriggerProps{ID: "vm-provider"}) {
+										@components.SelectValue(components.SelectValueProps{Placeholder: "Select provider"})
+									}
+									@components.SelectContent() {
+										@components.SelectItem(components.SelectItemProps{Value: "aws"}) {
+											AWS
+										}
+										@components.SelectItem(components.SelectItemProps{Value: "digitalocean"}) {
+											Digital Ocean
+										}
+									}
+								}
+								<input type="hidden" name="provider" id="provider-value"/>
+							</div>
+							<div>
+								@components.Label(components.LabelProps{For: "vm-region"}) {
+									Region
+								}
+								@components.Select() {
+									@components.SelectTrigger(components.SelectTriggerProps{ID: "vm-region"}) {
+										@components.SelectValue(components.SelectValueProps{Placeholder: "Select region"})
+									}
+									@components.SelectContent() {
+										@components.SelectItem(components.SelectItemProps{Value: "us-west-2"}) {
+											US West (Oregon)
+										}
+										@components.SelectItem(components.SelectItemProps{Value: "us-east-1"}) {
+											US East (N. Virginia)
+										}
+										@components.SelectItem(components.SelectItemProps{Value: "eu-west-1"}) {
+											EU (Ireland)
+										}
+									}
+								}
+								<input type="hidden" name="region" id="region-value"/>
+							</div>
+							<div>
+								@components.Label(components.LabelProps{For: "vm-type"}) {
+									Instance Type
+								}
+								@components.Select() {
+									@components.SelectTrigger(components.SelectTriggerProps{ID: "vm-type"}) {
+										@components.SelectValue(components.SelectValueProps{Placeholder: "Select instance type"})
+									}
+									@components.SelectContent() {
+										@components.SelectItem(components.SelectItemProps{Value: "t2.micro"}) {
+											t2.micro (1 vCPU, 1 GiB RAM)
+										}
+										@components.SelectItem(components.SelectItemProps{Value: "t2.small"}) {
+											t2.small (1 vCPU, 2 GiB RAM)
+										}
+										@components.SelectItem(components.SelectItemProps{Value: "t2.medium"}) {
+											t2.medium (2 vCPU, 4 GiB RAM)
+										}
+									}
+								}
+								<input type="hidden" name="instance_type" id="instance-type-value"/>
 							</div>
 						</div>
 					</div>
-					<!-- Tags -->
-					<div>
-						<h3 class="text-lg font-medium mb-4">Tags</h3>
-						<div>
-							<label for="vm-tags" class="block text-sm font-medium mb-1">Tags (comma separated)</label>
-							<input type="text" id="vm-tags" class="w-full px-3 py-2 border rounded-md" placeholder="web,production"/>
+					<div class="pt-4 border-t">
+						<h3 class="text-lg font-medium mb-4">Advanced Options</h3>
+						<div class="grid gap-6 md:grid-cols-2">
+							<div>
+								@components.Label(components.LabelProps{For: "vm-vpc"}) {
+									VPC Name
+								}
+								@components.Input(components.InputProps{
+									ID:          "vm-vpc",
+									Name:        "vpc",
+									Placeholder: "Leave blank for default",
+								})
+							</div>
+							<div>
+								@components.Label(components.LabelProps{For: "vm-subnet"}) {
+									Subnet CIDR
+								}
+								@components.Input(components.InputProps{
+									ID:          "vm-subnet",
+									Name:        "subnet",
+									Placeholder: "10.0.1.0/24",
+								})
+							</div>
 						</div>
 					</div>
-					<!-- Action Buttons -->
-					<div class="flex justify-end gap-4 pt-4">
-						<button type="button" class="px-4 py-2 border rounded-md hover:bg-muted">Cancel</button>
-						<button type="submit" class="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90">Create VM</button>
+					<div class="flex justify-between pt-6 border-t">
+						<a href="/infra">
+							@components.Button(components.ButtonProps{
+								Variant: components.ButtonVariantOutline,
+								Type:    "button",
+							}) {
+								Cancel
+							}
+						</a>
+						@components.Button(components.ButtonProps{
+							Type: "submit",
+						}) {
+							Create VM
+						}
 					</div>
 				</form>
 			</div>
 		</div>
+		<script>
+			// Handle select components to update hidden inputs
+			document.addEventListener('DOMContentLoaded', () => {
+				// Helper to sync select values to hidden inputs
+				function setupSelectSync(selectId, hiddenId) {
+					const select = document.getElementById(selectId);
+					const hidden = document.getElementById(hiddenId);
+					
+					if (select && hidden) {
+						select.addEventListener('change', (e) => {
+							hidden.value = e.target.value;
+						});
+					}
+				}
+				
+				// Setup syncing for all select components
+				setupSelectSync('vm-provider', 'provider-value');
+				setupSelectSync('vm-region', 'region-value');
+				setupSelectSync('vm-type', 'instance-type-value');
+			});
+		</script>
 	}
 }
