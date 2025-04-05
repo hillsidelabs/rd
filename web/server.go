@@ -28,7 +28,8 @@ func (s *Server) Start() error {
 
 	// Define a basic handler for the root path
 	mux.Handle("GET /", s.CatalogHandler())
-	mux.Handle("GET /infrastructure", s.Infra())
+	mux.Handle("GET /infra", s.Infra())
+	mux.Handle("GET /infra/newvm", s.InfraNewVM())
 
 	// Log that the server is starting
 	log.Printf("Server starting on port %s", s.port)

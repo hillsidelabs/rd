@@ -19,3 +19,10 @@ func (s *Server) Infra() http.Handler {
 		component.Render(r.Context(), w)
 	})
 }
+
+func (s *Server) InfraNewVM() http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		component := pages.InfraNewVM()
+		component.Render(r.Context(), w)
+	})
+}
