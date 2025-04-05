@@ -49,17 +49,18 @@ templ InfraNewVM() {
 								})
 							</div>
 						</div>
-						<div class="space-y-4">
+									<div class="space-y-4">
+													// Remove the Provider Configuration forms. AI!
 							<h3 class="text-lg font-medium">Provider Configuration</h3>
 							<div>
 								@components.Label(components.LabelProps{For: "vm-provider"}) {
 									Cloud Provider
 								}
-								@components.Select() {
+								@components.Select(components.SelectProps{}) {
 									@components.SelectTrigger(components.SelectTriggerProps{ID: "vm-provider"}) {
 										@components.SelectValue(components.SelectValueProps{Placeholder: "Select provider"})
 									}
-									@components.SelectContent() {
+									@components.SelectContent(components.SelectContentProps{}) {
 										@components.SelectItem(components.SelectItemProps{Value: "aws"}) {
 											AWS
 										}
@@ -74,11 +75,11 @@ templ InfraNewVM() {
 								@components.Label(components.LabelProps{For: "vm-region"}) {
 									Region
 								}
-								@components.Select() {
+								@components.Select(components.SelectProps{}) {
 									@components.SelectTrigger(components.SelectTriggerProps{ID: "vm-region"}) {
 										@components.SelectValue(components.SelectValueProps{Placeholder: "Select region"})
 									}
-									@components.SelectContent() {
+									@components.SelectContent(components.SelectContentProps{}) {
 										@components.SelectItem(components.SelectItemProps{Value: "us-west-2"}) {
 											US West (Oregon)
 										}
@@ -96,11 +97,11 @@ templ InfraNewVM() {
 								@components.Label(components.LabelProps{For: "vm-type"}) {
 									Instance Type
 								}
-								@components.Select() {
+								@components.Select(components.SelectProps{}) {
 									@components.SelectTrigger(components.SelectTriggerProps{ID: "vm-type"}) {
 										@components.SelectValue(components.SelectValueProps{Placeholder: "Select instance type"})
 									}
-									@components.SelectContent() {
+									@components.SelectContent(components.SelectContentProps{}) {
 										@components.SelectItem(components.SelectItemProps{Value: "t2.micro"}) {
 											t2.micro (1 vCPU, 1 GiB RAM)
 										}
@@ -166,14 +167,14 @@ templ InfraNewVM() {
 				function setupSelectSync(selectId, hiddenId) {
 					const select = document.getElementById(selectId);
 					const hidden = document.getElementById(hiddenId);
-					
+
 					if (select && hidden) {
 						select.addEventListener('change', (e) => {
 							hidden.value = e.target.value;
 						});
 					}
 				}
-				
+
 				// Setup syncing for all select components
 				setupSelectSync('vm-provider', 'provider-value');
 				setupSelectSync('vm-region', 'region-value');
