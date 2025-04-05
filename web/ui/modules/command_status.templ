@@ -87,10 +87,9 @@ templ CommandStatus(props CommandStatusProps) {
 				if props.ShowCopyBtn {
 					<div>
 						@components.Button(components.ButtonProps{
-							Size:    components.ButtonSizeSmall,
+							Size:    "small",
 							Variant: components.ButtonVariantOutline,
 							Class:   "h-7",
-							OnClick: "copyTerminalOutput('" + props.ID + "')",
 						}) {
 							Copy Output
 						}
@@ -117,26 +116,26 @@ templ CommandStatus(props CommandStatusProps) {
 			const terminals = document.querySelectorAll('[data-autoscroll="true"] .terminal-logs');
 			terminals.forEach(terminal => {
 				terminal.scrollTop = terminal.scrollHeight;
-				
+
 				// Set up an observer to auto-scroll when content changes
 				const observer = new MutationObserver(() => {
 					terminal.scrollTop = terminal.scrollHeight;
 				});
-				
+
 				observer.observe(terminal, { childList: true, subtree: true });
 			});
-			
+
 			// Define copy function if it doesn't exist
 			if (typeof window.copyTerminalOutput !== 'function') {
 				window.copyTerminalOutput = function(id) {
 					const terminal = document.querySelector('#' + id + ' .terminal-logs');
 					if (!terminal) return;
-					
+
 					// Get text content without formatting
 					const text = Array.from(terminal.querySelectorAll('div'))
 						.map(line => line.textContent.trim())
 						.join('\n');
-					
+
 					// Copy to clipboard
 					navigator.clipboard.writeText(text).then(() => {
 						// Show a temporary "Copied!" tooltip

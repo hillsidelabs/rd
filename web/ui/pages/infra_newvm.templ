@@ -13,7 +13,7 @@ templ InfraNewVM() {
 				<p class="text-muted-foreground mt-2">Configure and deploy a new infrastructure host</p>
 			</div>
 			<div class="bg-card border rounded-lg p-6">
-				<form action="/infra/create" method="POST" class="space-y-6">
+				<form action="/infra/newvm" method="POST" class="space-y-6">
 					<div class="grid gap-6 md:grid-cols-1">
 						<div class="space-y-4">
 							<h3 class="text-lg font-medium">Basic Information</h3>
@@ -105,16 +105,5 @@ templ InfraNewVM() {
 				</form>
 			</div>
 		</div>
-		<script>
-			// Form validation and submission handling
-			document.addEventListener('DOMContentLoaded', () => {
-				const form = document.querySelector('form');
-
-				form.addEventListener('submit', (e) => {
-					// Basic form validation could be added here
-					console.log('Form submitted');
-				});
-			});
-		</script>
 	}
 }
