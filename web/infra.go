@@ -48,7 +48,7 @@ func (s *Server) InfraNewVMCreate() http.Handler {
 
 		// Extract form values
 		name := r.FormValue("name")
-		hostname := r.FormValue("hostname")
+		// hostname := r.FormValue("hostname")
 		instanceType := r.FormValue("instance_type")
 		vpcName := r.FormValue("vpc")
 		tagsStr := r.FormValue("tags")
@@ -79,7 +79,7 @@ func (s *Server) InfraNewVMCreate() http.Handler {
 			log.Printf("Failed to load config: %v, using defaults", err)
 			config = infra.DefaultConfig()
 		}
-		
+
 		// Get latest AMI ID based on configuration
 		var imageID string
 		if config.Provider == infra.ProviderAWS {
@@ -94,24 +94,14 @@ func (s *Server) InfraNewVMCreate() http.Handler {
 			// For DigitalOcean, we'll use the image slug from config
 			imageID = config.DO.ImageSlug
 		}
-		
+
 		// Create VM using the appropriate provider
-		var vm infra.Infrastructure
-		if config.Provider == infra.ProviderAWS {
-			awsVM := amazon.NewVM(name, imageID, instanceType, tags)
-			
-			if vpcName != "" {
-				awsVM.VPC = vpcName
-			} else if config.AWS.VPC != "default" {
-				awsVM.VPC = config.AWS.VPC
-			}
-			
-			vm = awsVM
-		} else {
-			// TODO: Implement DigitalOcean VM creation
-			// For now, fall back to AWS
-			log.Printf("DigitalOcean provider not yet implemented, falling back to AWS")
-			vm = amazon.NewVM(name, imageID, instanceType, tags)
+		vm := amazon.NewVM(name, imageID, instanceType, tags)
+
+		if vpcName != "" {
+			vm.VPC = vpcName
+		} else if config.AWS.VPC != "default" {
+			vm.VPC = config.AWS.VPC
 		}
 
 		// Create command logs for the UI
@@ -148,7 +138,7 @@ func (s *Server) InfraNewVMCreate() http.Handler {
 
 			// TODO: Implement the actual VM creation logic
 			// This would involve calling the appropriate AWS API methods
-			
+
 			logs = append(logs, modules.CommandLogLine{
 				Content: fmt.Sprintf("VM '%s' created successfully", name),
 				Type:    modules.LogTypeSuccess,
