@@ -1,5 +1,0 @@
-<script nonce=\"
-\">\n\t\t\tdocument.addEventListener('alpine:init', () => {\n\t\t\t\tAlpine.data('themeSwitcherHandler', () => ({\n\t\t\t\t\tisDarkMode() {\n\t\t\t\t\t\treturn this.isDark\n\t\t\t\t\t},\n\t\t\t\t\tisLightMode() {\n\t\t\t\t\t\treturn !this.isDark\n\t\t\t\t\t}\n\t\t\t\t}))\n\t\t\t})\n\t\t</script>
-<div x-data=\"themeSwitcherHandler\"><span x-show=\"isDarkMode\" class=\"block\">
-</span> <span x-show=\"isLightMode\" class=\"block\">
-</span></div>
