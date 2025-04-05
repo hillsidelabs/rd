@@ -4,14 +4,14 @@ import "github.com/hillsidelabs/rd/web/ui/layouts"
 
 templ InfraNewVM() {
 	@layouts.BaseLayout() {
-		// Let's change this from a modal to a set of forms. AI!
-		<div id="create-vm-modal">
-			<div class="fixed inset-0 bg-black/50 z-40"></div>
-			<div class="fixed inset-0 z-50 flex items-center justify-center">
-				<div class="bg-background rounded-lg shadow-lg w-full max-w-md">
-					<div class="p-6">
-						<h3 class="text-lg font-semibold mb-4">Create New VM</h3>
-						<form class="space-y-4">
+		<div class="container mx-auto py-8 px-4 max-w-4xl">
+			<h1 class="text-2xl font-bold mb-6">Create New VM</h1>
+			<div class="bg-card rounded-lg shadow p-6 border">
+				<form class="space-y-6">
+					<!-- Basic Information -->
+					<div>
+						<h3 class="text-lg font-medium mb-4">Basic Information</h3>
+						<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 							<div>
 								<label for="vm-name" class="block text-sm font-medium mb-1">Name</label>
 								<input type="text" id="vm-name" class="w-full px-3 py-2 border rounded-md" placeholder="Enter VM name"/>
@@ -23,6 +23,12 @@ templ InfraNewVM() {
 									<option value="digitalocean">Digital Ocean</option>
 								</select>
 							</div>
+						</div>
+					</div>
+					<!-- Instance Configuration -->
+					<div>
+						<h3 class="text-lg font-medium mb-4">Instance Configuration</h3>
+						<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 							<div>
 								<label for="vm-type" class="block text-sm font-medium mb-1">Instance Type</label>
 								<select id="vm-type" class="w-full px-3 py-2 border rounded-md">
@@ -32,16 +38,48 @@ templ InfraNewVM() {
 								</select>
 							</div>
 							<div>
-								<label for="vm-tags" class="block text-sm font-medium mb-1">Tags (comma separated)</label>
-								<input type="text" id="vm-tags" class="w-full px-3 py-2 border rounded-md" placeholder="web,production"/>
+								<label for="vm-region" class="block text-sm font-medium mb-1">Region</label>
+								<select id="vm-region" class="w-full px-3 py-2 border rounded-md">
+									<option value="us-west-2">US West (Oregon)</option>
+									<option value="us-east-1">US East (N. Virginia)</option>
+									<option value="eu-west-1">EU (Ireland)</option>
+								</select>
 							</div>
-							<div class="flex justify-end gap-2 pt-4">
-								<button type="button" class="px-4 py-2 border rounded-md">Cancel</button>
-								<button type="submit" class="px-4 py-2 bg-primary text-primary-foreground rounded-md">Create VM</button>
-							</div>
-						</form>
+						</div>
 					</div>
-				</div>
+					<!-- Networking -->
+					<div>
+						<h3 class="text-lg font-medium mb-4">Networking</h3>
+						<div class="space-y-4">
+							<div>
+								<label for="vm-vpc" class="block text-sm font-medium mb-1">VPC</label>
+								<select id="vm-vpc" class="w-full px-3 py-2 border rounded-md">
+									<option value="default">Default VPC</option>
+									<option value="create-new">Create New VPC</option>
+								</select>
+							</div>
+							<div>
+								<label for="vm-subnet" class="block text-sm font-medium mb-1">Subnet</label>
+								<select id="vm-subnet" class="w-full px-3 py-2 border rounded-md">
+									<option value="default">Default Subnet</option>
+								</select>
+							</div>
+						</div>
+					</div>
+					<!-- Tags -->
+					<div>
+						<h3 class="text-lg font-medium mb-4">Tags</h3>
+						<div>
+							<label for="vm-tags" class="block text-sm font-medium mb-1">Tags (comma separated)</label>
+							<input type="text" id="vm-tags" class="w-full px-3 py-2 border rounded-md" placeholder="web,production"/>
+						</div>
+					</div>
+					<!-- Action Buttons -->
+					<div class="flex justify-end gap-4 pt-4">
+						<button type="button" class="px-4 py-2 border rounded-md hover:bg-muted">Cancel</button>
+						<button type="submit" class="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90">Create VM</button>
+					</div>
+				</form>
 			</div>
 		</div>
 	}
