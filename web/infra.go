@@ -110,6 +110,8 @@ func (s *Server) InfraNewVMCreate() http.Handler {
 			{Content: fmt.Sprintf("Using image ID: %s", imageID), Type: modules.LogTypeInfo, Time: time.Now().Add(time.Millisecond * 100)},
 		}
 
+		// When we create this VM in a goroutine, I want to stream the logs to the client using Server Side Events. The server should send the log lines and they should added to the `CommandStatus` component in the `InfraNewVMCreate` page. The SSE will use HTMX on the frontend. The docs are https://htmx.org/extensions/sse/. I expect an ID will need to be created for the background work and that the template will need a URL that uses the ID to accept the events and add to the logs. AI!
+
 		// Start VM creation in a goroutine to avoid blocking the response
 		go func() {
 			logs = append(logs, modules.CommandLogLine{
