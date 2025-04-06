@@ -1,11 +1,12 @@
 package web
 
 import (
-	"log"
 	"net/http"
 	"os"
 
 	"github.com/hillsidelabs/rd/web/assets"
+	"github.com/hillsidelabs/rd/web/middleware"
+	"github.com/rs/zerolog/log"
 )
 
 // Server represents the HTTP server configuration
@@ -34,10 +35,13 @@ func (s *Server) Start() error {
 	mux.Handle("GET /infra/vm/events", s.VMCreationSSE())
 
 	// Log that the server is starting
-	log.Printf("Server starting on port %s", s.port)
+	log.Info().Str("port", s.port).Msg("Server starting")
+
+	// Apply middleware
+	handler := middleware.RequestLogger(mux)
 
 	// Start the server with the wrapped handler
-	return http.ListenAndServe(":"+s.port, mux)
+	return http.ListenAndServe(":"+s.port, handler)
 }
 
 func SetupAssetsRoutes(mux *http.ServeMux) {
