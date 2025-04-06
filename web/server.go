@@ -34,6 +34,9 @@ func (s *Server) Start() error {
 	mux.Handle("POST /infra/newvm", s.InfraNewVMCreate())
 	mux.Handle("GET /infra/vm/events", s.VMCreationSSE())
 
+	// Fill in the following handler with a SSE handler that accepts a `num_events` query param and sends that of SSE events where the `event` is `log` and the data is some html that has `<div>This is the { i } event</div>`. AI!
+	mux.Handle("GET /test/sse", http.HandlerFunc())
+
 	// Log that the server is starting
 	log.Info().Str("port", s.port).Msg("Server starting")
 
