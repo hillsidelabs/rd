@@ -1,8 +1,11 @@
 package web
 
 import (
+	"fmt"
 	"net/http"
 	"os"
+	"strconv"
+	"time"
 
 	"github.com/hillsidelabs/rd/web/assets"
 	"github.com/hillsidelabs/rd/web/middleware"
@@ -35,7 +38,45 @@ func (s *Server) Start() error {
 	mux.Handle("GET /infra/vm/events", s.VMCreationSSE())
 
 	// Fill in the following handler with a SSE handler that accepts a `num_events` query param and sends that of SSE events where the `event` is `log` and the data is some html that has `<div>This is the { i } event</div>`. AI!
-	mux.Handle("GET /test/sse", http.HandlerFunc())
+	mux.Handle("GET /test/sse", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Set headers for SSE
+		w.Header().Set("Content-Type", "text/event-stream")
+		w.Header().Set("Cache-Control", "no-cache")
+		w.Header().Set("Connection", "keep-alive")
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+
+		// Parse the num_events query parameter
+		numEventsStr := r.URL.Query().Get("num_events")
+		numEvents := 5 // Default value
+		if numEventsStr != "" {
+			if n, err := strconv.Atoi(numEventsStr); err == nil && n > 0 {
+				numEvents = n
+			}
+		}
+
+		// Create a flusher to ensure data is sent immediately
+		flusher, ok := w.(http.Flusher)
+		if !ok {
+			http.Error(w, "Streaming not supported", http.StatusInternalServerError)
+			return
+		}
+
+		// Send the specified number of SSE events
+		for i := 1; i <= numEvents; i++ {
+			// Format the event data
+			data := fmt.Sprintf("<div>This is the %d event</div>", i)
+			
+			// Write the event
+			fmt.Fprintf(w, "event: log\n")
+			fmt.Fprintf(w, "data: %s\n\n", data)
+			
+			// Flush to send the data immediately
+			flusher.Flush()
+			
+			// Add a small delay between events
+			time.Sleep(500 * time.Millisecond)
+		}
+	}))
 
 	// Log that the server is starting
 	log.Info().Str("port", s.port).Msg("Server starting")
