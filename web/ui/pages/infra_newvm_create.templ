@@ -12,7 +12,7 @@ type InfraNewVMCreateProps struct {
 	Logs         []modules.CommandLogLine
 	IsRunning    bool
 	ExitCode     int
-	JobID        string
+	SSEUrl       string
 }
 
 templ InfraNewVMCreate(props InfraNewVMCreateProps) {
@@ -22,6 +22,7 @@ templ InfraNewVMCreate(props InfraNewVMCreateProps) {
 				<h1 class="text-2xl font-bold">Creating VM: { props.VMName }</h1>
 				<p class="text-muted-foreground mt-2">Instance type: { props.InstanceType }</p>
 			</div>
+			<div>Using <a href={ templ.URL(props.SSEUrl) }>{ props.SSEUrl }</a></div>
 			<div class="space-y-6">
 				@modules.CommandStatus(modules.CommandStatusProps{
 					ID:          "vm-creation-status",
@@ -34,7 +35,7 @@ templ InfraNewVMCreate(props InfraNewVMCreateProps) {
 					AutoScroll:  true,
 					ShowCopyBtn: true,
 					Class:       "w-full",
-					JobID:       props.JobID,
+					SSEUrl:      props.SSEUrl,
 				})
 				<div class="flex justify-between pt-6">
 					<a href="/infra">

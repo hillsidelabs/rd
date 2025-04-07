@@ -36,7 +36,20 @@ type CommandStatusProps struct {
 	AutoScroll  bool
 	ShowCopyBtn bool
 	Class       string
-	JobID       string
+	SSEUrl      string
+}
+
+templ CommandStatusLogLine(log CommandLogLine) {
+	<div class={ getLogLineClass(log.Type) }>
+		if !log.Time.IsZero() {
+			<span class="text-gray-500 mr-2">{ formatTime(log.Time) }</span>
+		}
+		if log.Type == LogTypeCommand {
+			<span class="text-blue-400">$</span> <span class="text-green-400">{ log.Content }</span>
+		} else {
+			<span>{ log.Content }</span>
+		}
+	</div>
 }
 
 templ CommandStatus(props CommandStatusProps) {
@@ -44,11 +57,6 @@ templ CommandStatus(props CommandStatusProps) {
 		id={ props.ID }
 		class={ "terminal-container rounded-md border overflow-hidden " + props.Class }
 		data-autoscroll={ boolToString(props.AutoScroll) }
-		if props.JobID != "" {
-			hx-ext="sse"
-			sse-connect={ "/infra/vm/events?job=" + props.JobID }
-			sse-swap="log"
-		}
 	>
 		<div class="bg-muted/50 px-4 py-2 border-b flex justify-between items-center">
 			<div class="flex items-center gap-2">
@@ -69,23 +77,16 @@ templ CommandStatus(props CommandStatusProps) {
 			class="bg-black text-white font-mono text-sm p-4 overflow-y-auto terminal-logs"
 			style={ "max-height:" + getMaxHeight(props.MaxHeight) }
 			id={ props.ID + "-logs" }
+			if props.SSEUrl != "" {
+				hx-ext="sse"
+				sse-connect={ props.SSEUrl }
+				sse-swap="log"
+				hx-swap="beforeend"
+				sse-close="close"
+			}
 		>
 			for _, log := range props.Logs {
-				<div class={ getLogLineClass(log.Type) }>
-					if !log.Time.IsZero() {
-						<span class="text-gray-500 mr-2">{ formatTime(log.Time) }</span>
-					}
-					if log.Type == LogTypeCommand {
-						<span class="text-blue-400">$</span> <span class="text-green-400">{ log.Content }</span>
-					} else {
-						<span>{ log.Content }</span>
-					}
-				</div>
-			}
-			if props.IsRunning {
-				<div class="animate-pulse">
-					<span class="text-green-400">$</span> <span class="animate-blink">_</span>
-				</div>
+				@CommandStatusLogLine(log)
 			}
 		</div>
 		if !props.IsRunning {
@@ -117,142 +118,6 @@ templ CommandStatus(props CommandStatusProps) {
 			animation: blink 1s step-end infinite;
 		}
 	</style>
-	<script>
-		document.addEventListener('DOMContentLoaded', () => {
-			// Auto-scroll functionality
-			const terminals = document.querySelectorAll('[data-autoscroll="true"] .terminal-logs');
-			terminals.forEach(terminal => {
-				terminal.scrollTop = terminal.scrollHeight;
-
-				// Set up an observer to auto-scroll when content changes
-				const observer = new MutationObserver(() => {
-					terminal.scrollTop = terminal.scrollHeight;
-				});
-
-				observer.observe(terminal, { childList: true, subtree: true });
-			});
-
-			// Define copy function if it doesn't exist
-			if (typeof window.copyTerminalOutput !== 'function') {
-				window.copyTerminalOutput = function(id) {
-					const terminal = document.querySelector('#' + id + ' .terminal-logs');
-					if (!terminal) return;
-
-					// Get text content without formatting
-					const text = Array.from(terminal.querySelectorAll('div'))
-						.map(line => line.textContent.trim())
-						.join('\n');
-
-					// Copy to clipboard
-					navigator.clipboard.writeText(text).then(() => {
-						// Show a temporary "Copied!" tooltip
-						const btn = document.querySelector('#' + id + ' button');
-						const originalText = btn.textContent;
-						btn.textContent = 'Copied!';
-						setTimeout(() => {
-							btn.textContent = originalText;
-						}, 2000);
-					});
-				}
-			}
-			
-			// Handle SSE events for log updates
-			if (typeof window.handleSSELogEvent !== 'function') {
-				window.handleSSELogEvent = function(event) {
-					if (event.type === 'log') {
-						try {
-							const logData = JSON.parse(event.data);
-							const terminalId = event.target.closest('[id]').getAttribute('id');
-							const terminalLogs = document.querySelector('#' + terminalId + '-logs');
-							
-							if (!terminalLogs) return;
-							
-							// Create a new log line
-							const logLine = document.createElement('div');
-							logLine.className = getLogLineClass(logData.Type);
-							
-							// Add timestamp if available
-							if (logData.Time) {
-								const timeSpan = document.createElement('span');
-								timeSpan.className = 'text-gray-500 mr-2';
-								timeSpan.textContent = formatTimeFromISO(logData.Time);
-								logLine.appendChild(timeSpan);
-							}
-							
-							// Add command prefix for command type logs
-							if (logData.Type === 'command') {
-								const cmdPrefix = document.createElement('span');
-								cmdPrefix.className = 'text-blue-400';
-								cmdPrefix.textContent = '$ ';
-								logLine.appendChild(cmdPrefix);
-								
-								const cmdContent = document.createElement('span');
-								cmdContent.className = 'text-green-400';
-								cmdContent.textContent = logData.Content;
-								logLine.appendChild(cmdContent);
-							} else {
-								logLine.appendChild(document.createTextNode(logData.Content));
-							}
-							
-							// Add to terminal
-							terminalLogs.appendChild(logLine);
-							
-							// Auto-scroll
-							if (terminalLogs.closest('[data-autoscroll="true"]')) {
-								terminalLogs.scrollTop = terminalLogs.scrollHeight;
-							}
-						} catch (e) {
-							console.error('Error processing log data:', e);
-						}
-					} else if (event.type === 'complete') {
-						// Update status to completed
-						const container = event.target.closest('[id]');
-						const statusIndicator = container.querySelector('.animate-pulse');
-						if (statusIndicator) {
-							statusIndicator.classList.remove('animate-pulse');
-						}
-						
-						// Add "Create Another VM" button if not present
-						const actionBar = container.parentNode.querySelector('.flex.justify-between');
-						if (actionBar && !actionBar.querySelector('a[href="/infra/newvm"]')) {
-							const createAnotherBtn = document.createElement('a');
-							createAnotherBtn.href = '/infra/newvm';
-							createAnotherBtn.innerHTML = `
-								<button type="button" class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2">
-									Create Another VM
-								</button>
-							`;
-							actionBar.appendChild(createAnotherBtn);
-						}
-					}
-				}
-				
-				// Helper function to format ISO time string
-				window.formatTimeFromISO = function(isoString) {
-					const date = new Date(isoString);
-					return date.toTimeString().split(' ')[0];
-				}
-				
-				// Helper function to get log line class
-				window.getLogLineClass = function(logType) {
-					switch (logType) {
-						case 'error': return 'text-red-400';
-						case 'success': return 'text-green-400';
-						case 'info': return 'text-blue-400';
-						case 'stderr': return 'text-yellow-400';
-						case 'warning': return 'text-orange-400';
-						case 'command': return '';
-						default: return '';
-					}
-				}
-				
-				// Register global event listener for SSE messages
-				document.body.addEventListener('htmx:sseMessage', function(evt) {
-					handleSSELogEvent(evt.detail);
-				});
-			}
-		});
-	</script>
 }
 
 // Example usage of the component

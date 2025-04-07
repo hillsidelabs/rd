@@ -7,8 +7,10 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/a-h/templ"
 	"github.com/hillsidelabs/rd/web/assets"
 	"github.com/hillsidelabs/rd/web/middleware"
+	"github.com/hillsidelabs/rd/web/ui/pages"
 	"github.com/rs/zerolog/log"
 )
 
@@ -37,8 +39,12 @@ func (s *Server) Start() error {
 	mux.Handle("POST /infra/newvm", s.InfraNewVMCreate())
 	mux.Handle("GET /infra/vm/events", s.VMCreationSSE())
 
-	// Fill in the following handler with a SSE handler that accepts a `num_events` query param and sends that of SSE events where the `event` is `log` and the data is some html that has `<div>This is the { i } event</div>`. AI!
+	mux.Handle("GET /test/sse_viewer", templ.Handler(pages.SSETest()))
 	mux.Handle("GET /test/sse", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Set CORS headers to allow all origins. You may want to restrict this to specific origins in a production environment.
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Expose-Headers", "Content-Type")
+
 		// Set headers for SSE
 		w.Header().Set("Content-Type", "text/event-stream")
 		w.Header().Set("Cache-Control", "no-cache")
@@ -65,14 +71,14 @@ func (s *Server) Start() error {
 		for i := 1; i <= numEvents; i++ {
 			// Format the event data
 			data := fmt.Sprintf("<div>This is the %d event</div>", i)
-			
+
 			// Write the event
 			fmt.Fprintf(w, "event: log\n")
 			fmt.Fprintf(w, "data: %s\n\n", data)
-			
+
 			// Flush to send the data immediately
 			flusher.Flush()
-			
+
 			// Add a small delay between events
 			time.Sleep(500 * time.Millisecond)
 		}

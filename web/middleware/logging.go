@@ -79,3 +79,11 @@ func (rw *ResponseWriter) Write(b []byte) (int, error) {
 func (rw *ResponseWriter) Status() int {
 	return rw.statusCode
 }
+
+// Flush implements the http.Flusher interface
+func (rw *ResponseWriter) Flush() {
+				// Check if the underlying ResponseWriter implements http.Flusher
+				if flusher, ok := rw.ResponseWriter.(http.Flusher); ok {
+								flusher.Flush()
+        }
+}

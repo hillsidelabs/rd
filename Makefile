@@ -39,7 +39,7 @@ tailwind-watch:
 # Start development server
 dev:
 	make tailwind-clean
-	make -j3 templ server tailwind-watch
+	make server tailwind-watch
 
 bootstrap:
 	go install github.com/air-verse/air@latest
