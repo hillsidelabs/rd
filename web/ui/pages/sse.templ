@@ -1,0 +1,15 @@
+package pages
+
+import "github.com/hillsidelabs/rd/web/ui/layouts"
+
+templ SSETest() {
+	@layouts.BaseLayout() {
+		<div
+			hx-ext="sse"
+			sse-connect="/test/sse?num_events=25"
+			sse-swap="log"
+		>
+			This should get new events
+		</div>
+	}
+}

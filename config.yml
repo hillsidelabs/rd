@@ -1,0 +1,21 @@
+provider: aws
+aws:
+    region: us-west-2
+    vpc: default
+    subnet: default
+    security_group: default
+    key_pair: default
+    instance_type: t2.micro
+    image_owner: "099720109477"
+    image_name_filter: ubuntu/images/hvm-ssd/ubuntu-*-22.04-amd64-server-*
+    tags:
+        ManagedBy: rd
+digitalocean:
+    region: nyc1
+    size: s-1vcpu-1gb
+    image_slug: ubuntu-22-04-x64
+    tags:
+        - rd-managed
+    ssh_keys: []
+    vpc_name: default
+    custom_labels: {}
